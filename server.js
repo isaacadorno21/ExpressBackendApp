@@ -1,5 +1,5 @@
 // Get the packages we need
-var express = require('express'),
+const express = require('express'),
     router = express.Router(),
     mongoose = require('mongoose'),
     secrets = require('./config/secrets'),
@@ -12,7 +12,11 @@ var app = express();
 var port = process.env.PORT || 4000;
 
 // Connect to a MongoDB
-mongoose.connect(secrets.mongo_connection,  { useNewUrlParser: true });
+mongoose.connect(secrets.mongo_connection,  { 
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useFindAndModify: false
+});
 
 // Allow CORS so that backend and frontend could be put on different servers
 var allowCrossDomain = function (req, res, next) {
@@ -29,8 +33,11 @@ app.use(bodyParser.urlencoded({
 }));
 app.use(bodyParser.json());
 
+app.use(require('./routes/userRoutes.js'));
+app.use(require('./routes/taskRoutes.js'));
+
 // Use routes as a module (see index.js)
-require('./routes')(app, router);
+//require('./routes')(app, router);
 
 // Start the server
 app.listen(port);
