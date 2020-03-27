@@ -3,26 +3,45 @@ const taskModel = require('../models/task');
 const app = express();
 
 app.get('/tasks', async (req, res) => {
-    const tasks = await taskModel.find({});
-    res.send(tasks);
+    try {
+        const tasks = await taskModel.find({});
+        json_obj = {
+            "message" : "OK",
+            "data" : tasks
+        };
+        res.status(200).send(json_obj);
+    } catch (err) {
+        res.status(500).send("Error occured :(");
+    }
 });
 
 app.get('/tasks/:id', async (req, res) => {
     try {
         const task = await taskModel.findById(req.params.id);
-        res.send(task);
+        json_obj = {
+            "message" : "OK",
+            "data" : task
+        };
+        res.status(200).send(json_obj);
     } catch (err) {
         res.status(404).send("No task found :(");
     }
 });
 
 app.post('/tasks', async (req, res) => {
-    let today = new Date();
-    req.body.dateCreated = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
-
-    const tasks = new taskModel(req.body);
-    await tasks.save();
-    res.send(tasks);
+    try {
+        let today = new Date();
+        req.body.dateCreated = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+        const task = new taskModel(req.body);
+        await task.save();
+        json_obj = {
+            "message" : "OK",
+            "data" : task
+        };
+        res.status(201).send(json_obj);
+    } catch (err) {
+        res.status(500).send("Unable to POST task :(");
+    }
 });
 
 app.delete('/tasks/:id', async (req, res) => {
@@ -38,9 +57,13 @@ app.put('/tasks/:id', async (req, res) => {
     try {
         await taskModel.findByIdAndUpdate(req.params.id, req.body)
         await taskModel.save()
-        res.send(task)
+        json_obj = {
+            "message" : "OK",
+            "data" : task
+        };
+        res.status(201).send(json_obj);
       } catch (err) {
-        res.status(500).send("No task found :(");
+        res.status(404).send("No task found :(");
     }
 });
 

@@ -15,7 +15,8 @@ var port = process.env.PORT || 4000;
 mongoose.connect(secrets.mongo_connection,  { 
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    useFindAndModify: false
+    useFindAndModify: false,
+    useCreateIndex: true
 });
 
 // Allow CORS so that backend and frontend could be put on different servers
