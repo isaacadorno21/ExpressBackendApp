@@ -2,9 +2,48 @@ const express = require('express');
 const userModel = require('../models/user');
 const app = express();
 
-app.get('api/users', async (req, res) => {
+app.get('/api/users', async (req, res) => {
     try {
-        const users = await userModel.find({});
+        let find_val = {};
+        let sort_val = {};
+        let select_val = {};
+        let lim = 0;
+        let skip = 0;
+        //let count = false;
+
+        for (cur_req in req.query) {
+            switch(cur_req) {
+                case "where":
+                    find_val = JSON.parse(req.query.where);
+                    break;
+                case "sort":
+                    sort_val = JSON.parse(req.query.sort);
+                    break;
+                case "select":
+                    select_val = JSON.parse(req.query.select);
+                    break;
+                case "skip":
+                    skip = JSON.parse(req.query.skip);
+                    break;
+                case "limit":
+                    lim = JSON.parse(req.query.limit);
+                    break;
+                case "count":
+                    //count = JSON.parse(req.query.count);
+                    break;
+                default:
+                    console.log("invalid query");
+            }
+        }
+
+        let users = await userModel
+        .find(find_val)
+        .skip(skip)
+        .limit(lim)
+        .select(select_val)
+        .sort(sort_val);
+        //.count(count);
+
         json_obj = {
             "message" : "OK",
             "data" : users
@@ -15,7 +54,7 @@ app.get('api/users', async (req, res) => {
     }
 });
 
-app.get('api/users/:id', async (req, res) => {
+app.get('/api/users/:id', async (req, res) => {
     try {
         const user = await userModel.findById(req.params.id);
         json_obj = {
@@ -28,7 +67,7 @@ app.get('api/users/:id', async (req, res) => {
     }
 });
 
-app.post('api/users', async (req, res) => {
+app.post('/api/users', async (req, res) => {
     try {
         let today = new Date();
         req.body.dateCreated = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
@@ -38,13 +77,16 @@ app.post('api/users', async (req, res) => {
             "message" : "OK",
             "data" : user
         };
+
+        //If pending tasks found...
+
         res.status(201).send(json_obj);
     } catch (err) {
         res.status(500).send("Unable to POST user :(");
     }
 });
 
-app.delete('api/users/:id', async (req, res) => {
+app.delete('/api/users/:id', async (req, res) => {
     try {
         await userModel.findByIdAndDelete(req.params.id);
         res.status(200).send();
@@ -53,7 +95,7 @@ app.delete('api/users/:id', async (req, res) => {
     }
 });
 
-app.put('api/users/:id', async (req, res) => {
+app.put('/api/users/:id', async (req, res) => {
     try {
         await userModel.findByIdAndUpdate(req.params.id, req.body)
         await userModel.save()
