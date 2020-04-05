@@ -50,7 +50,11 @@ app.get('/api/tasks', async (req, res) => {
         };
         res.status(200).send(json_obj);
     } catch (err) {
-        res.status(500).send("Error occured :(");
+        json_obj = {
+            "message" : "Error occured :(",
+            "data" : []
+        };
+        res.status(500).send(json_obj);
     }
 });
 
@@ -63,7 +67,11 @@ app.get('/api/tasks/:id', async (req, res) => {
         };
         res.status(200).send(json_obj);
     } catch (err) {
-        res.status(404).send("No task found :(");
+        json_obj = {
+            "message" : "No task found :(",
+            "data" : []
+        };
+        res.status(404).send(json_obj);
     }
 });
 
@@ -79,7 +87,11 @@ app.post('/api/tasks', async (req, res) => {
         };
         res.status(201).send(json_obj);
     } catch (err) {
-        res.status(500).send("Unable to POST task :(");
+        json_obj = {
+            "message" : "Unable to POST task :(",
+            "data" : []
+        };
+        res.status(500).send(json_obj);
     }
 });
 
@@ -88,7 +100,11 @@ app.delete('/api/tasks/:id', async (req, res) => {
         await taskModel.findByIdAndDelete(req.params.id);
         res.status(200).send();
       } catch (err) {
-        res.status(404).send("No task found :(");
+        json_obj = {
+            "message" : "No task found :(",
+            "data" : []
+        };
+        res.status(404).send(json_obj);
     }
 });
 
@@ -102,7 +118,11 @@ app.put('/api/tasks/:id', async (req, res) => {
         };
         res.status(201).send(json_obj);
       } catch (err) {
-        res.status(404).send("No task found :(");
+        json_obj = {
+            "message" : "No task found :(",
+            "data" : []
+        };
+        res.status(404).send(json_obj);
     }
 });
 
