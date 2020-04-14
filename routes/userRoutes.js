@@ -33,7 +33,7 @@ app.get('/api/users', async (req, res) => {
                     count = JSON.parse(req.query.count);
                     break;
                 default:
-                    console.log("invalid query");
+                    console.log("Query does not match specified GET requests (where, sort, etc...)");
             }
         }
 
