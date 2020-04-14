@@ -1,5 +1,6 @@
 const express = require('express');
 const userModel = require('../models/user');
+const taskModel = require('../models/task');
 const app = express();
 
 app.get('/api/users', async (req, res) => {
@@ -9,7 +10,7 @@ app.get('/api/users', async (req, res) => {
         let select_val = {};
         let lim = 0;
         let skip = 0;
-        //let count = false;
+        let count = false;
 
         for (cur_req in req.query) {
             switch(cur_req) {
@@ -29,7 +30,7 @@ app.get('/api/users', async (req, res) => {
                     lim = JSON.parse(req.query.limit);
                     break;
                 case "count":
-                    //count = JSON.parse(req.query.count);
+                    count = JSON.parse(req.query.count);
                     break;
                 default:
                     console.log("invalid query");
@@ -42,7 +43,7 @@ app.get('/api/users', async (req, res) => {
         .limit(lim)
         .select(select_val)
         .sort(sort_val);
-        //.count(count);
+        //.countDocuments(count)
 
         json_obj = {
             "message" : "OK",
@@ -99,7 +100,17 @@ app.post('/api/users', async (req, res) => {
 
 app.delete('/api/users/:id', async (req, res) => {
     try {
-        await userModel.findByIdAndDelete(req.params.id);
+        const user = await userModel.findByIdAndDelete(req.params.id);
+        
+        //Update user if task includes an assignedUser
+        let taskArr = user.pendingTasks;
+        for (i = 0; i < taskArr.length; i++) { 
+            let task = await taskModel.findById(taskArr[i]);
+            task.assignedUser = "";
+            task.assignedUserName = "";
+            await task.save();
+        }
+
         res.status(200).send();
       } catch (err) {
         json_obj = {

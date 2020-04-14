@@ -1,5 +1,6 @@
 const express = require('express');
 const taskModel = require('../models/task');
+const userModel = require('../models/user');
 const app = express();
 
 app.get('/api/tasks', async (req, res) => {
@@ -32,7 +33,7 @@ app.get('/api/tasks', async (req, res) => {
                     //count = JSON.parse(req.query.count);
                     break;
                 default:
-                    console.log("invalid query");
+                    console.log("Query does not match specified GET requests (where, sort, etc...)");
             }
         }
 
@@ -81,6 +82,17 @@ app.post('/api/tasks', async (req, res) => {
         req.body.dateCreated = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
         const task = new taskModel(req.body);
         await task.save();
+
+        //Update user if task includes an assignedUser
+        const userID = task.assignedUser;
+        if (userID != null) {
+            const user = await userModel.findById(userID);
+            if (user.pendingTasks.includes(task.id) == false) {
+                user.pendingTasks.push(task.id);
+            }
+            await user.save();
+        }
+
         json_obj = {
             "message" : "OK",
             "data" : task
@@ -97,7 +109,18 @@ app.post('/api/tasks', async (req, res) => {
 
 app.delete('/api/tasks/:id', async (req, res) => {
     try {
-        await taskModel.findByIdAndDelete(req.params.id);
+        const task = await taskModel.findByIdAndDelete(req.params.id);
+
+        //Update user if task includes an assignedUser
+        const userID = task.assignedUser;
+        if (userID != null) {
+            let user = await userModel.findById(userID);
+            if (user.pendingTasks.includes(task.id) == true) {
+                user.pendingTasks = user.pendingTasks.filter(function(value){ return value != task.id;});
+            }
+            await user.save();
+        }
+
         res.status(200).send();
       } catch (err) {
         json_obj = {
