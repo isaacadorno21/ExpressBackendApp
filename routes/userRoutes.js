@@ -107,7 +107,7 @@ app.delete('/api/users/:id', async (req, res) => {
         for (i = 0; i < taskArr.length; i++) { 
             let task = await taskModel.findById(taskArr[i]);
             task.assignedUser = "";
-            task.assignedUserName = "";
+            task.assignedUserName = "unassigned";
             await task.save();
         }
 
