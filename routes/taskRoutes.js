@@ -85,12 +85,14 @@ app.post('/api/tasks', async (req, res) => {
 
         //Update user if task includes an assignedUser
         const userID = task.assignedUser;
-        if (userID != null) {
+        if (userID !== null && userID != "") {
             const user = await userModel.findById(userID);
-            if (user.pendingTasks.includes(task.id) == false) {
-                user.pendingTasks.push(task.id);
+            if (user !== null) {
+                if (user.pendingTasks.includes(task.id) == false) {
+                    user.pendingTasks.push(task.id);
+                }
+                await user.save();    
             }
-            await user.save();
         }
 
         json_obj = {
@@ -99,6 +101,7 @@ app.post('/api/tasks', async (req, res) => {
         };
         res.status(201).send(json_obj);
     } catch (err) {
+        console.log(err);
         json_obj = {
             "message" : "Unable to POST task :(",
             "data" : []
