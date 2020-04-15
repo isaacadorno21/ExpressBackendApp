@@ -9,7 +9,7 @@ app.get('/api/users', async (req, res) => {
         let sort_val = {};
         let select_val = {};
         let lim = 0;
-        let skip = 0;
+        let skip_val = 0;
         let count = false;
 
         for (cur_req in req.query) {
@@ -24,7 +24,7 @@ app.get('/api/users', async (req, res) => {
                     select_val = JSON.parse(req.query.select);
                     break;
                 case "skip":
-                    skip = JSON.parse(req.query.skip);
+                    skip_val = JSON.parse(req.query.skip);
                     break;
                 case "limit":
                     lim = JSON.parse(req.query.limit);
@@ -37,13 +37,20 @@ app.get('/api/users', async (req, res) => {
             }
         }
 
-        let users = await userModel
-        .find(find_val)
-        .skip(skip)
-        .limit(lim)
-        .select(select_val)
-        .sort(sort_val);
-        //.countDocuments(count)
+        //there's probably a better way to do this, but not sure how to with await....
+        let users = {};
+ 
+        if (count == true) {
+            users = await userModel.countDocuments(true);
+        }
+        else {
+            users = await userModel
+            .find(find_val)
+            .skip(skip_val)
+            .limit(lim)
+            .select(select_val)
+            .sort(sort_val);
+        }
 
         json_obj = {
             "message" : "OK",
@@ -52,7 +59,7 @@ app.get('/api/users', async (req, res) => {
         res.status(200).send(json_obj);
     } catch (err) {
         json_obj = {
-            "message" : "Error occured :(",
+            "message" : "Error occured during GET request :(",
             "data" : []
         };
         res.status(500).send(json_obj);
@@ -86,8 +93,6 @@ app.post('/api/users', async (req, res) => {
             "message" : "OK",
             "data" : user
         };
-
-        //If pending tasks found...
 
         res.status(201).send(json_obj);
     } catch (err) {
@@ -123,11 +128,10 @@ app.delete('/api/users/:id', async (req, res) => {
 
 app.put('/api/users/:id', async (req, res) => {
     try {
-        await userModel.findByIdAndUpdate(req.params.id, req.body)
-        await userModel.save()
+        const user = await userModel.findByIdAndUpdate(req.params.id, req.body)
         json_obj = {
             "message" : "OK",
-            "data" : user
+            "data" : []
         };
         res.status(201).send(json_obj);
       } catch (err) {

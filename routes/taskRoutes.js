@@ -9,8 +9,8 @@ app.get('/api/tasks', async (req, res) => {
         let sort_val = {};
         let select_val = {};
         let lim = 0;
-        let skip = 0;
-        //let count = false;
+        let skip_val = 0;
+        let count = false;
 
         for (cur_req in req.query) {
             switch(cur_req) {
@@ -24,26 +24,34 @@ app.get('/api/tasks', async (req, res) => {
                     select_val = JSON.parse(req.query.select);
                     break;
                 case "skip":
-                    skip = JSON.parse(req.query.skip);
+                    skip_val = JSON.parse(req.query.skip);
                     break;
                 case "limit":
                     lim = JSON.parse(req.query.limit);
                     break;
                 case "count":
-                    //count = JSON.parse(req.query.count);
+                    count = JSON.parse(req.query.count);
                     break;
                 default:
                     console.log("Query does not match specified GET requests (where, sort, etc...)");
             }
         }
 
-        let tasks = await taskModel
-        .find(find_val)
-        .skip(skip)
-        .limit(lim)
-        .select(select_val)
-        .sort(sort_val);
-        //.count(count);
+        //there's probably a better way to do this, but not sure how to with await....
+        let tasks = {};
+ 
+        if (count == true) {
+            //tasks = await taskModel.countDocuments(true, {limit : lim, skip : skip_val});
+            tasks = await taskModel.countDocuments(true);
+        }
+        else {
+            tasks = await taskModel
+            .find(find_val)
+            .skip(skip_val)
+            .limit(lim)
+            .select(select_val)
+            .sort(sort_val);
+        }
 
         json_obj = {
             "message" : "OK",
@@ -52,7 +60,7 @@ app.get('/api/tasks', async (req, res) => {
         res.status(200).send(json_obj);
     } catch (err) {
         json_obj = {
-            "message" : "Error occured :(",
+            "message" : "Error occured during GET request :(",
             "data" : []
         };
         res.status(500).send(json_obj);
@@ -116,7 +124,7 @@ app.delete('/api/tasks/:id', async (req, res) => {
 
         //Update user if task includes an assignedUser
         const userID = task.assignedUser;
-        if (userID != null) {
+        if (userID !== null && userID !== "") {
             let user = await userModel.findById(userID);
             if (user.pendingTasks.includes(task.id) == true) {
                 user.pendingTasks = user.pendingTasks.filter(function(value){ return value != task.id;});
@@ -136,11 +144,10 @@ app.delete('/api/tasks/:id', async (req, res) => {
 
 app.put('/api/tasks/:id', async (req, res) => {
     try {
-        await taskModel.findByIdAndUpdate(req.params.id, req.body)
-        await taskModel.save()
+        const task = await taskModel.findByIdAndUpdate(req.params.id, req.body)
         json_obj = {
             "message" : "OK",
-            "data" : task
+            "data" : []
         };
         res.status(201).send(json_obj);
       } catch (err) {
